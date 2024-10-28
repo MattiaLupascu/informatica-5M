@@ -152,16 +152,60 @@ ON goal.matchid = game.id
 WHERE player LIKE 'Mario%';
 -- # 5. Show player, teamid, coach, gtime for all goals scored in the
 -- # first 10 minutes gtime<=10
+SELECT player, teamid, coach, gtime
+FROM euro2012.goal JOIN euro2012.eteam
+WHERE gtime<=10;
 -- # 6. List the the dates of the matches and the name of the team in
 -- # which 'Fernando Santos' was the team1 coach.
+SELECT mdate,teamname
+FROM euro2012.game JOIN euro2012.eteam
+WHERE team1=eteam.id AND coach='Fernando Santos';
 -- # 7. List the player for every goal scored in a game where the
 -- # staium was 'National Stadium, Warsaw'
+SELECT player
+FROM euro2012.goal JOIN euro2012.game
+WHERE matchid=game.id AND stadium='National Stadium, Warsaw';
 -- # 8. Show names of all players who scored a goal against Germany.
+SELECT DISTINCT player
+FROM euro2012.goal JOIN euro2012.game
+WHERE matchid=game.id AND goal.teamid != 'GER' AND (game.team1 = 'GER' OR game.team2 = 'GER');
 -- # 9. Show teamname and the total number of goals scored.
+SELECT teamname,COUNT(*) AS total_goals
+FROM euro2012.eteam JOIN euro2012.goal
+WHERE teamid=eteam.id 
+GROUP BY teamname;
 -- # 10. Show the stadium and the number of goals scored in each
 -- # stadium.
+SELECT stadium,COUNT(*) AS total_goals
+FROM euro2012.game JOIN euro2012.goal
+WHERE game.id=matchid 
+GROUP BY stadium;
 -- # 11. For every match involving 'POL', show the matchid, date and
 -- # the number of goals scored.
+SELECT matchid,mdate,COUNT(*) AS total_goals
+FROM euro2012.game JOIN euro2012.goal
+WHERE game.id=matchid AND (team1='POL' OR team2='POL')
+GROUP BY matchid;
 -- # 12. For every match where 'GER' scored, show matchid, match date
 -- # and the number of goals scored by 'GER'
+SELECT matchid,mdate,COUNT(*) AS total_goals
+FROM euro2012.game JOIN euro2012.goal
+WHERE game.id=matchid AND teamid='GER'
+GROUP BY matchid;
 -- # 13. List every match with the goals scored by each team as shown.
+SELECT game.mdate, 
+       game.team1, 
+       SUM(CASE WHEN goal.teamid = game.team1
+           THEN 1
+           ELSE 0
+           END) AS score1,
+       game.team2,
+       SUM(CASE WHEN goal.teamid = game.team2
+           THEN 1
+           ELSE 0
+           END) AS score2
+FROM euro2012.game
+JOIN euro2012.goal
+ON (game.id = goal.matchid)
+GROUP BY game.id
+ORDER BY game.mdate, goal.matchid
